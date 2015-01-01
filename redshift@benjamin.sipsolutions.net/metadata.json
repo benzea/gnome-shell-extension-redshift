@@ -1,0 +1,7 @@
+{
+"shell-version": ["3.14"],
+"uuid": "redshift@benjamin.sipsolutions.net",
+"name": "Redshift GNOME",
+"description": "Lower the color temperature of the displays at night.",
+"url": "https://github.com/benzea/gnome-shell-extension-redshift"
+}

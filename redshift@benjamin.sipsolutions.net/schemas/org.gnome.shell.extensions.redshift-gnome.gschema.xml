@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions-redshift-gnome">
+    <enum id="org.gnome.shell.extensions.redshift-gnome.state-enum">
+        <value nick="disabled" value="0"/>
+        <value nick="normal" value="1"/>
+        <value nick="force" value="2"/>
+    </enum>
+
+  <schema path="/org/gnome/shell/extensions/redshift-gnome/" id="org.gnome.shell.extensions.redshift-gnome">
+    <key type="b" name="enabled">
+        <default>false</default>
+        <summary>Store caffeine user state</summary>
+        <description></description>
+    </key>
+    <key type="u" name="night-color-temperature">
+        <default>3500</default>
+        <range min="1000" max="20000" />
+        <summary>The displays color temperature at night</summary>
+        <description></description>
+    </key>
+    <key type="u" name="day-color-temperature">
+        <default>6500</default>
+        <range min="1000" max="20000" />
+        <summary>The displays color temperature by day</summary>
+        <description>The displays color temperature by day. The default is 6500 Kelvin which is an identity transformation.</description>
+    </key>
+    <key type="b" name="show-indicator">
+        <default>true</default>
+        <summary>Show indicator</summary>
+        <description>Show the indicator on the top panel</description>
+    </key>
+    <key enum="org.gnome.shell.extensions.redshift-gnome.state-enum" name="state">
+        <default>'normal'</default>
+        <summary>The current redshift mode.</summary>
+        <description></description>
+    </key>
+    <key type="d" name="night-day">
+        <default>1.0</default>
+        <range min="0.0" max="1.0" />
+        <summary>Current night/day state.</summary>
+        <description>Whether it is night or day, night being 0.0 and day 1.0, values in between represent dusk/dawn.</description>
+    </key>
+    <key type="ad" name="last-location">
+        <default>[]</default>
+        <summary>Last known location and accuracy</summary>
+        <description>Last known location (latitude and longitude in degrees) and accuracy (in meters).</description>
+    </key>
+  </schema>
+</schemalist>
