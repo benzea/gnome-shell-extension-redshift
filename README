@@ -1,0 +1,11 @@
+Redshift GNOME shell extension
+==============================
+
+This redshift extension is a native redshift implementation for GNOME. For
+it to work changes in the color mangement of gnome-settings-daemon are
+required. However, because it hooks into the GNOME color management, any
+color profile that adjustes the gamma curves of the monitor automatically
+will keep working.
+
+To test you need to apply the gnome-settings-daemon patch in
+https://bugzilla.gnome.org/show_bug.cgi?id=742149.
