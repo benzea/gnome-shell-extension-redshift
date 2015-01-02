@@ -245,8 +245,8 @@ const Redshift = new Lang.Class({
             /* We are not in polar summer/winter, we can do normal calculations. */
 
             if (daytime) {
-                let dawn = 0.5 + (time - sunrise[1]) / dusk_dawn_length * 0.5;
-                let dusk = 0.5 + (sunset[1] - time) / dusk_dawn_length * 0.5;
+                let dawn = 0.5 + (time - sunrise[1]) / dusk_dawn_length * 0.25;
+                let dusk = 0.5 + (sunset[1] - time) / dusk_dawn_length * 0.25;
 
                 night_day = Math.min(1.0, dawn, dusk);
             } else {
@@ -256,8 +256,8 @@ const Redshift = new Lang.Class({
                 if (sunset[1] > time)
                     sunset[1] = sunset[1] - 24 * 60 * 60;
 
-                let dawn = 0.5 - (sunrise[1] - time) / dusk_dawn_length * 0.5;
-                let dusk = 0.5 - (time - sunset[1]) / dusk_dawn_length * 0.5;
+                let dawn = 0.5 - (sunrise[1] - time) / dusk_dawn_length * 0.25;
+                let dusk = 0.5 - (time - sunset[1]) / dusk_dawn_length * 0.25;
 
                 night_day = Math.max(0.0, dawn, dusk);
             }
