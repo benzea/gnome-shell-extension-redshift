@@ -68,11 +68,12 @@ const Redshift = new Lang.Class({
         this.parent(null, IndicatorName);
 
         this._settings = Lib.getSettings(Me);
-        this._settings.connect("changed", Lang.bind(this, this._configChanged));
+        this._settings_changed_id = this._settings.connect("changed", Lang.bind(this, this._configChanged));
 
         this._color_settings = new Gio.Settings({ schema: 'org.gnome.settings-daemon.plugins.color' });
 
         this._notify_location_id = null;
+        this._geoclue_create = null;
         this._update_color_timeout = null;
 
         if (!this._settings.get_boolean(SHOW_INDICATOR_KEY))
@@ -204,6 +205,9 @@ const Redshift = new Lang.Class({
 
         /* Empty placeholder */
         this._geoclue = {}
+        /* Not passed in to constructor, as actually cancelling the setup
+         * doesn't stop the services. */
+        this._geoclue_create = new Gio.Cancellable();
 
         //let id = 'org.gnome.shell.extensions.redshift-gnome';
         //let level = GClue.AccuracyLevel.CITY;
@@ -216,10 +220,24 @@ const Redshift = new Lang.Class({
             }
             catch (e) {
                 log("GeoClue2 service: " + e.message);
+                this._geoclue = null;
+                this._geoclue_create = null;
                 return;
             }
 
-            log('redshift: geoclue client created and active')
+            if (this._geoclue_create.is_cancelled()) {
+                log('redshift: connect operation got cancelled, ensuring disconnect')
+                let client = this._geoclue.get_client();
+                let cancellable = new Gio.Cancellable();
+                if (client)
+                    client.call_stop_sync(cancellable);
+
+                this._geoclue = null;
+                return;
+            }
+            this._geoclue_create = null;
+
+            log('redshift: geoclue client created and active', this._geoclue)
 
             this._notify_location_id = this._geoclue.connect('notify::location',
                                                             this._onLocationNotify.bind(this));
@@ -234,6 +252,11 @@ const Redshift = new Lang.Class({
 
         log('redshift: destroying geoclue client')
 
+        if (this._geoclue_create) {
+            log('redshift: cancelling connect')
+            this._geoclue_create.cancel();
+        }
+
         if (this._notify_location_id) {
             log('redshift: disconnecting location notification callback')
             this._geoclue.disconnect(this._notify_location_id);
@@ -245,6 +268,7 @@ const Redshift = new Lang.Class({
         }
         this._notify_location_id = null;
         this._geoclue = null;
+        log('redshift: geoclue client destroyed')
     },
 
     _updateLocationService : function() {
@@ -269,9 +293,7 @@ const Redshift = new Lang.Class({
                                                               loc.longitude,
                                                               loc.accuracy]));
 
-        if (state == STATE_NORMAL) {
-            this._updateColorTempBasedOnTime();
-        }
+        // _recalcNightDay will be called because the settings were updated.
     },
 
     _updateColorTempBasedOnTime : function() {
@@ -284,21 +306,14 @@ const Redshift = new Lang.Class({
         let night_day = 1.0;
         let geoloc = null;
 
-        if (this._geoclue && this._geoclue.get_location) {
-            log("redshift: Have GeoClue connection.");
-            geoloc = this._geoclue.get_location();
+        let lastLocation = this._settings.get_value('last-location').deep_unpack();
+        if (lastLocation.length >= 3) {
+            let [lat, lng, accuracy] = lastLocation;
+            geoloc = new Geocode.Location({ latitude: lat,
+                                            longitude: lng,
+                                            accuracy: accuracy });
         }
 
-        if (geoloc === null) {
-            log("redshift: Don't have a location from GeoClue, falling back to stored location!");
-            let lastLocation = this._settings.get_value('last-location').deep_unpack();
-            if (lastLocation.length >= 3) {
-                let [lat, lng, accuracy] = lastLocation;
-                geoloc = new Geocode.Location({ latitude: lat,
-                                                longitude: lng,
-                                                accuracy: accuracy });
-            }
-        }
         if (geoloc === null) {
             log("redshift: Don't have any location (neither GeoClue nor cached) assuming daytime!");
             return night_day;
@@ -352,10 +367,11 @@ const Redshift = new Lang.Class({
     destroy: function() {
         this._geoclueDestroy();
 
-        this._setColorTemp(false, 1.0);
-
         // disconnect from signals
+        this._settings.disconnect(this._settings_changed_id);
         this.parent();
+
+        this._setColorTemp(false, 1.0);
     }
 });
 
