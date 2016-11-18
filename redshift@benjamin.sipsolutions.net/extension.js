@@ -227,8 +227,11 @@ const Redshift = new Lang.Class({
     _recalcNightDay : function() {
         let night_day = 1.0;
 
-        let world = GWeather.Location.new_world(false);
         let geoloc = this._geoclue.location;
+        if (geoloc === null)
+            return night_day;
+
+        let world = GWeather.Location.new_world(false);
         let city = world.find_nearest_city(geoloc.latitude, geoloc.longitude);
 
         // What meaning does the forecast type have?
