@@ -364,8 +364,12 @@ const Redshift = new Lang.Class({
     destroy: function() {
         this._geoclueDestroy();
 
-        // disconnect from signals
+        // disconnect from signals and timeouts
         this._settings.disconnect(this._settings_changed_id);
+        if (this._update_color_timeout != null) {
+            Mainloop.source_remove(this._update_color_timeout);
+            this._update_color_timeout = null;
+        }
         this.parent();
 
         this._setColorTemp(false, 1.0);
