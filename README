@@ -1,9 +1,3 @@
-WARNING: The GeoClue2 integration is pretty much broken. Sometimes it does
-not work at all, sometimes it freezes the whole shell. There seem to be two
-issues, one is that the class is registered multiple times (or not
-unregistered properly) and the other is that the GeoClue2 service complains
-about timeouts on the DBus connection.
-
 Redshift GNOME shell extension
 ==============================
 
