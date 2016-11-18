@@ -103,9 +103,6 @@ const Redshift = new Lang.Class({
 
         this._night_day_slider.setValue(this._settings.get_double(NIGHT_DAY_KEY));
 
-//        let icon = new St.Icon({ icon_name: 'display-brightness-symbolic',
-//                                 style_class: 'popup-menu-icon' });
-//        item.actor.add(icon);
         item.actor.add(this._night_day_slider.actor, { expand: true });
         item.actor.connect('button-press-event', Lang.bind(this, function(actor, event) {
             return this._night_day_slider.startDragging(event);
