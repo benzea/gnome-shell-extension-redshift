@@ -13,6 +13,12 @@
         <summary>The displays color temperature at night</summary>
         <description></description>
     </key>
+    <key type="u" name="dusk-dawn-length">
+        <default>60</default>
+        <range min="10" max="120" />
+        <summary>The length in minute of the dusk and dawn progression.</summary>
+        <description>The time over which to shift the displays color temperature between the nighttime and daytime color temperatures. This is applied to both the local sunset and sunrise times.</description>
+    </key>
     <key type="u" name="day-color-temperature">
         <default>6500</default>
         <range min="1000" max="20000" />

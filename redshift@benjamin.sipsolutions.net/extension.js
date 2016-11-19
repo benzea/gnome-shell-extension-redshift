@@ -322,7 +322,7 @@ const Redshift = new Lang.Class({
 
         let time = GLib.get_real_time() / 1000 / 1000;
 
-        let dusk_dawn_length = 60 * 60;
+        let dusk_dawn_length = this._settings.get_uint(Lib.DUSK_DAWN_LENGTH_KEY) * 60;
 
         if (sunrise[0] && sunset[0]) {
             /* We are not in polar summer/winter, we can do normal calculations. */

@@ -23,6 +23,7 @@ const STATE_KEY = 'state';
 const NIGHT_TEMP_KEY = 'night-color-temperature';
 const DAY_TEMP_KEY = 'day-color-temperature';
 const NIGHT_DAY_KEY = 'night-day';
+const DUSK_DAWN_LENGTH_KEY = 'dusk-dawn-length';
 
 const STATE_DISABLED = 0;
 const STATE_NORMAL = 1;
