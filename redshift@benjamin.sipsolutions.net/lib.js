@@ -18,6 +18,18 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Gettext = imports.gettext;
 
+const SHOW_INDICATOR_KEY = 'show-indicator';
+const STATE_KEY = 'state';
+const NIGHT_TEMP_KEY = 'night-color-temperature';
+const DAY_TEMP_KEY = 'day-color-temperature';
+const NIGHT_DAY_KEY = 'night-day';
+
+const STATE_DISABLED = 0;
+const STATE_NORMAL = 1;
+const STATE_FORCE = 2;
+
+
+
 function getSettings(extension) {
     let schemaName = 'org.gnome.shell.extensions.redshift-gnome';
     let schemaDir = extension.dir.get_child('schemas').get_path();

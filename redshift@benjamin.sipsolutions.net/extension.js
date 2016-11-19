@@ -37,16 +37,6 @@ const Config = imports.misc.config;
 const Slider = imports.ui.slider;
 
 
-const SHOW_INDICATOR_KEY = 'show-indicator';
-const STATE_KEY = 'state';
-const NIGHT_TEMP_KEY = 'night-color-temperature';
-const DAY_TEMP_KEY = 'day-color-temperature';
-const NIGHT_DAY_KEY = 'night-day';
-
-const STATE_DISABLED = 0;
-const STATE_NORMAL = 1;
-const STATE_FORCE = 2;
-
 const Gettext = imports.gettext.domain('gnome-shell-extension-redshift');
 const _ = Gettext.gettext;
 
@@ -76,7 +66,7 @@ const Redshift = new Lang.Class({
         this._geoclue_create = null;
         this._update_color_timeout = null;
 
-        if (!this._settings.get_boolean(SHOW_INDICATOR_KEY))
+        if (!this._settings.get_boolean(Lib.SHOW_INDICATOR_KEY))
             this.actor.hide();
 
         this._icon = new St.Icon({
@@ -87,8 +77,8 @@ const Redshift = new Lang.Class({
         this.actor.add_actor(this._icon);
         this.actor.add_style_class_name('panel-status-button');
 
-        let state = this._settings.get_enum(STATE_KEY);
-        this._location_based_switch = new PopupMenu.PopupSwitchMenuItem(_("Location based"), state == STATE_NORMAL);
+        let state = this._settings.get_enum(Lib.STATE_KEY);
+        this._location_based_switch = new PopupMenu.PopupSwitchMenuItem(_("Location based"), state == Lib.STATE_NORMAL);
         this._location_based_switch.connect('toggled', Lang.bind(this, this._location_based_toggled));
         this.menu.addMenuItem(this._location_based_switch);
 
@@ -101,7 +91,7 @@ const Redshift = new Lang.Class({
         this._night_day_slider.connect('value-changed', Lang.bind(this, this._night_day_sliderChanged));
         this._night_day_slider.actor.accessible_name = _("Night Day Slider");
 
-        this._night_day_slider.setValue(this._settings.get_double(NIGHT_DAY_KEY));
+        this._night_day_slider.setValue(this._settings.get_double(Lib.NIGHT_DAY_KEY));
 
         item.actor.add(this._night_day_slider.actor, { expand: true });
         item.actor.connect('button-press-event', Lang.bind(this, function(actor, event) {
@@ -118,15 +108,15 @@ const Redshift = new Lang.Class({
         if (this._night_day_slider_internal_udpate)
             return;
 
-        this._settings.set_enum(STATE_KEY, STATE_FORCE);
-        this._settings.set_double(NIGHT_DAY_KEY, value);
+        this._settings.set_enum(Lib.STATE_KEY, Lib.STATE_FORCE);
+        this._settings.set_double(Lib.NIGHT_DAY_KEY, value);
     },
 
     _setColorTemp : function(enabled, night_day) {
         this._color_settings.set_boolean("adjust-color-temperature", enabled);
 
-        let night_temp = this._settings.get_uint(NIGHT_TEMP_KEY);
-        let day_temp = this._settings.get_uint(DAY_TEMP_KEY);
+        let night_temp = this._settings.get_uint(Lib.NIGHT_TEMP_KEY);
+        let day_temp = this._settings.get_uint(Lib.DAY_TEMP_KEY);
 
         let temp = Math.round(night_temp * (1 - night_day) + day_temp * night_day);
 
@@ -155,13 +145,13 @@ const Redshift = new Lang.Class({
         let value = this._location_based_switch.state;
 
         if (value)
-            this._settings.set_enum(STATE_KEY, STATE_NORMAL);
+            this._settings.set_enum(Lib.STATE_KEY, Lib.STATE_NORMAL);
         else
-            this._settings.set_enum(STATE_KEY, STATE_FORCE);
+            this._settings.set_enum(Lib.STATE_KEY, Lib.STATE_FORCE);
     },
 
     _configChanged : function() {
-        if (this._settings.get_boolean(SHOW_INDICATOR_KEY))
+        if (this._settings.get_boolean(Lib.SHOW_INDICATOR_KEY))
             this.actor.show();
         else
             this.actor.hide();
@@ -173,10 +163,10 @@ const Redshift = new Lang.Class({
             this._update_color_timeout = null;
         }
 
-        let state = this._settings.get_enum(STATE_KEY);
-        this._setColorTemp(true, this._settings.get_double(NIGHT_DAY_KEY));
-        if (state != STATE_DISABLED) {
-            if (state == STATE_NORMAL) {
+        let state = this._settings.get_enum(Lib.STATE_KEY);
+        this._setColorTemp(true, this._settings.get_double(Lib.NIGHT_DAY_KEY));
+        if (state != Lib.STATE_DISABLED) {
+            if (state == Lib.STATE_NORMAL) {
                 if (!this._location_based_switch.state)
                     this._location_based_switch.setToggleState(true);
 
@@ -187,7 +177,7 @@ const Redshift = new Lang.Class({
                 if (this._location_based_switch.state)
                     this._location_based_switch.setToggleState(false);
 
-                this._setColorTemp(true, this._settings.get_double(NIGHT_DAY_KEY));
+                this._setColorTemp(true, this._settings.get_double(Lib.NIGHT_DAY_KEY));
             }
         } else {
                 this._setColorTemp(false, 1.0);
@@ -274,8 +264,8 @@ const Redshift = new Lang.Class({
     },
 
     _updateLocationService : function() {
-        let state = this._settings.get_enum(STATE_KEY);
-        if (state == STATE_NORMAL) {
+        let state = this._settings.get_enum(Lib.STATE_KEY);
+        if (state == Lib.STATE_NORMAL) {
             this._geoclueCreate();
         } else {
             this._geoclueDestroy();
@@ -283,7 +273,7 @@ const Redshift = new Lang.Class({
     },
 
     _onLocationNotify : function(simple) {
-        let state = this._settings.get_enum(STATE_KEY);
+        let state = this._settings.get_enum(Lib.STATE_KEY);
 
         log('redshift: got location notification from geoclue')
 
