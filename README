@@ -22,6 +22,17 @@ See also:
   https://bugzilla.gnome.org/show_bug.cgi?id=741224
   https://bugzilla.gnome.org/show_bug.cgi?id=742149
 
+Configuration
+=============
+
+Use gnome-tweak-tool or https://extensions.gnome.org to open the configuration
+dialog. There you can configure:
+
+ * The daytime color temperature (default: 6500K)
+ * The nighttime color temperature (default: 3500K)
+ * Whether to show the indicator (default: yes)
+ * The length of dusk/dawn (default: 60 minutes)
+
 
 Location
 ========
