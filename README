@@ -23,3 +23,17 @@ See also:
   https://bugzilla.gnome.org/show_bug.cgi?id=742149
 
 
+Location
+========
+
+The shell will prompt you to give GNOME Maps access to the current location
+this is because redshift uses this location to calculte the dusk and dawn
+times.
+
+Bugs/Issues/Improvements
+========================
+
+* Currently the gnome-maps ID is used for GeoClue. Using our own does not work
+  without providing a desktop file (and I am not sure how to ship that)
+* The dusk/dawn times should be configurable to be a fixed local time
+* The preference dialog is ugly
