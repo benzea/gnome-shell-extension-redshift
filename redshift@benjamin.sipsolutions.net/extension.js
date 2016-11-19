@@ -197,9 +197,8 @@ const Redshift = new Lang.Class({
         this._geoclue_create = new Gio.Cancellable();
 
         //let id = 'org.gnome.shell.extensions.redshift-gnome';
-        //let level = GClue.AccuracyLevel.CITY;
+        let level = GClue.AccuracyLevel.CITY;
         let id = 'org.gnome.Maps';
-        let level = GClue.AccuracyLevel.EXACT;
 
         GClue.Simple.new(id, level, null, (function(object, result) {
             log("redshift: gclue simple created");
