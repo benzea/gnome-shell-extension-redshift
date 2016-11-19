@@ -195,13 +195,13 @@ const Redshift = new Lang.Class({
     },
 
     _geoclueCreate : function() {
-        if (this._geoclue != null)
+        if (this._geoclue != null || this._geoclue_create != null)
             return;
 
         log('redshift: creating geoclue client')
 
         /* Empty placeholder */
-        this._geoclue = {}
+        this._geoclue = null
         /* Not passed in to constructor, as actually cancelling the setup
          * doesn't stop the services. */
         this._geoclue_create = new Gio.Cancellable();
@@ -212,6 +212,7 @@ const Redshift = new Lang.Class({
         let level = GClue.AccuracyLevel.EXACT;
 
         GClue.Simple.new(id, level, null, (function(object, result) {
+            log("redshift: gclue simple created");
             try {
                 this._geoclue = GClue.Simple.new_finish(result);
             }
@@ -230,6 +231,7 @@ const Redshift = new Lang.Class({
                     client.call_stop_sync(cancellable);
 
                 this._geoclue = null;
+                this._geoclue_create = null;
                 return;
             }
             this._geoclue_create = null;
@@ -244,25 +246,28 @@ const Redshift = new Lang.Class({
     },
 
     _geoclueDestroy : function() {
-        if (this._geoclue == null)
-            return;
-
-        log('redshift: destroying geoclue client')
-
         if (this._geoclue_create) {
             log('redshift: cancelling connect')
             this._geoclue_create.cancel();
         }
 
+        if (this._geoclue == null)
+            return;
+
+        log('redshift: destroying geoclue client')
+
         if (this._notify_location_id) {
             log('redshift: disconnecting location notification callback')
             this._geoclue.disconnect(this._notify_location_id);
+        }
 
-            log('redshift: sending explicit stop')
-            let client = this._geoclue.get_client();
+        let client = this._geoclue.get_client();
+        if (client) {
             let cancellable = new Gio.Cancellable();
+            log('redshift: sending explicit stop')
             client.call_stop_sync(cancellable);
         }
+
         this._notify_location_id = null;
         this._geoclue = null;
         log('redshift: geoclue client destroyed')
@@ -383,11 +388,15 @@ function init(extensionMeta) {
 }
 
 function enable() {
+    log('redshift: enabling extension')
+
     RedshiftIndicator = new Redshift();
     Main.panel.addToStatusArea(IndicatorName, RedshiftIndicator);
 }
 
 function disable() {
+    log('redshift: disabling extension')
+
     RedshiftIndicator.destroy();
     RedshiftIndicator = null;
 }
