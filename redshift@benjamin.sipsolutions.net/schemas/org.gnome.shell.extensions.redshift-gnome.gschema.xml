@@ -7,11 +7,6 @@
     </enum>
 
   <schema path="/org/gnome/shell/extensions/redshift-gnome/" id="org.gnome.shell.extensions.redshift-gnome">
-    <key type="b" name="enabled">
-        <default>false</default>
-        <summary>Store caffeine user state</summary>
-        <description></description>
-    </key>
     <key type="u" name="night-color-temperature">
         <default>3500</default>
         <range min="1000" max="20000" />
