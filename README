@@ -32,7 +32,10 @@ dialog. There you can configure:
  * The nighttime color temperature (default: 3500K)
  * Whether to show the indicator (default: yes)
  * The length of dusk/dawn (default: 60 minutes)
-
+ * Sunrise/sunset calculation mode (geoclue locaion, last known location, fixed time)
+   (default: geoclue)
+ * The sunrise/sunset time when in fixed time mode based on the local time
+   (default: 7:30 and 19:30)
 
 Location
 ========
@@ -49,5 +52,4 @@ Bugs/Issues/Improvements
 
 * Currently the gnome-maps ID is used for GeoClue. Using our own does not work
   without providing a desktop file (and I am not sure how to ship that)
-* The dusk/dawn times should be configurable to be a fixed local time
 * The preference dialog is ugly
