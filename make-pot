@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cd $(dirname $0)/redshift@benjamin.sipsolutions.net
+xgettext -k_ -kN_ -o locale/messages.pot *.js
+
+echo "See https://wiki.gnome.org/Projects/GnomeShell/Extensions/FAQ/CreatingExtensions for more information on how to translate the extension."
