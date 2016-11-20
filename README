@@ -38,8 +38,11 @@ Location
 ========
 
 The shell will prompt you to give GNOME Maps access to the current location
-this is because redshift uses this location to calculte the dusk and dawn
+this is because redshift uses this location to calculate the dusk and dawn
 times.
+
+You might have to enable Location Services under All Settings -> Privacy
+for this to work if Gnome is not prompting for permission.
 
 Bugs/Issues/Improvements
 ========================
