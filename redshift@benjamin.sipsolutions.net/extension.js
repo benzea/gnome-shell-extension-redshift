@@ -78,9 +78,9 @@ const Redshift = new Lang.Class({
         this.actor.add_style_class_name('panel-status-button');
 
         let state = this._settings.get_enum(Lib.STATE_KEY);
-        this._location_based_switch = new PopupMenu.PopupSwitchMenuItem(_("Location based"), state == Lib.STATE_NORMAL);
-        this._location_based_switch.connect('toggled', Lang.bind(this, this._location_based_toggled));
-        this.menu.addMenuItem(this._location_based_switch);
+        this._time_based_switch = new PopupMenu.PopupSwitchMenuItem(_("Time based"), state == Lib.STATE_NORMAL);
+        this._time_based_switch.connect('toggled', Lang.bind(this, this._time_based_toggled));
+        this.menu.addMenuItem(this._time_based_switch);
 
 
         let item = new PopupMenu.PopupBaseMenuItem({ activate: false });
@@ -141,8 +141,8 @@ const Redshift = new Lang.Class({
         this._night_day_slider_internal_udpate = false;
     },
 
-    _location_based_toggled : function() {
-        let value = this._location_based_switch.state;
+    _time_based_toggled : function() {
+        let value = this._time_based_switch.state;
 
         if (value)
             this._settings.set_enum(Lib.STATE_KEY, Lib.STATE_NORMAL);
@@ -167,15 +167,15 @@ const Redshift = new Lang.Class({
         this._setColorTemp(true, this._settings.get_double(Lib.NIGHT_DAY_KEY));
         if (state != Lib.STATE_DISABLED) {
             if (state == Lib.STATE_NORMAL) {
-                if (!this._location_based_switch.state)
-                    this._location_based_switch.setToggleState(true);
+                if (!this._time_based_switch.state)
+                    this._time_based_switch.setToggleState(true);
 
                 this._updateColorTempBasedOnTime();
 
                 this._update_color_timeout = Mainloop.timeout_add_seconds(60, Lang.bind(this, function() {this._updateColorTempBasedOnTime(); return true}));
             } else { /* STATE_FORCE */
-                if (this._location_based_switch.state)
-                    this._location_based_switch.setToggleState(false);
+                if (this._time_based_switch.state)
+                    this._time_based_switch.setToggleState(false);
 
                 this._setColorTemp(true, this._settings.get_double(Lib.NIGHT_DAY_KEY));
             }
@@ -264,7 +264,9 @@ const Redshift = new Lang.Class({
 
     _updateLocationService : function() {
         let state = this._settings.get_enum(Lib.STATE_KEY);
-        if (state == Lib.STATE_NORMAL) {
+        let time_source = this._settings.get_enum(Lib.TIME_SOURCE_KEY);
+
+        if (state == Lib.STATE_NORMAL && time_source == Lib.TIME_SOURCE_GEOCLUE) {
             this._geoclueCreate();
         } else {
             this._geoclueDestroy();
@@ -296,60 +298,93 @@ const Redshift = new Lang.Class({
     _recalcNightDay : function() {
         let night_day = 1.0;
         let geoloc = null;
-
-        let lastLocation = this._settings.get_value('last-location').deep_unpack();
-        if (lastLocation.length >= 3) {
-            let [lat, lng, accuracy] = lastLocation;
-            geoloc = new Geocode.Location({ latitude: lat,
-                                            longitude: lng,
-                                            accuracy: accuracy });
-        }
-
-        if (geoloc === null) {
-            log("redshift: Don't have any location (neither GeoClue nor cached) assuming daytime!");
-            return night_day;
-        }
-
-        let world = GWeather.Location.new_world(false);
-        let city = world.find_nearest_city(geoloc.latitude, geoloc.longitude);
-
-        // What meaning does the forecast type have?
-        let info = new GWeather.Info({location: city});
-        let sunrise = info.get_value_sunrise();
-        let sunset = info.get_value_sunset();
-        let daytime = info.is_daytime();
+        // Time of todays sunrise/sunset.
+        let sunrise;
+        let sunset;
+        // Whether it is daytime or nighttime right now
+        let daytime;
 
         let time = GLib.get_real_time() / 1000 / 1000;
 
-        let dusk_dawn_length = this._settings.get_uint(Lib.DUSK_DAWN_LENGTH_KEY) * 60;
+        let time_source = this._settings.get_enum(Lib.TIME_SOURCE_KEY);
 
-        if (sunrise[0] && sunset[0]) {
-            /* We are not in polar summer/winter, we can do normal calculations. */
+        if (time_source == Lib.TIME_SOURCE_FIXED) {
+            sunrise = this._settings.get_uint(Lib.SUNRISE_TIME_KEY);
+            sunset = this._settings.get_uint(Lib.SUNSET_TIME_KEY);
 
-            if (daytime) {
-                let dawn = 0.5 + (time - sunrise[1]) / dusk_dawn_length;
-                let dusk = 0.5 + (sunset[1] - time) / dusk_dawn_length;
+            /* Add last midnight to sunset/sunrise times to calculate todays
+             * time of the sunrise and sunset. */
+            let dt = GLib.DateTime.new_now_local();
+            let ymd = dt.get_ymd();
+            dt = GLib.DateTime.new_local(ymd[0], ymd[1], ymd[2], 0, 0, 0);
+            sunrise = sunrise + dt.to_unix();
+            sunset = sunset + dt.to_unix();
 
-                night_day = Math.min(1.0, dawn, dusk);
+            if (sunrise < sunset) {
+                daytime = time > sunrise && time < sunset;
             } else {
-                /* At night we need to shift sunrise/sunset to the next/previous day. */
-                if (sunrise[1] < time)
-                    sunrise[1] = sunrise[1] + 24 * 60 * 60;
-                if (sunset[1] > time)
-                    sunset[1] = sunset[1] - 24 * 60 * 60;
-
-                let dawn = 0.5 - (sunrise[1] - time) / dusk_dawn_length;
-                let dusk = 0.5 - (time - sunset[1]) / dusk_dawn_length;
-
-                night_day = Math.max(0.0, dawn, dusk);
+                daytime = time > sunrise || time < sunset;
             }
         } else {
-            /* Polar summer/winter. Unfortunately we cannot determine any dusk/dawn times. */
-            if (daytime) {
-                night_day = 1.0;
-            } else {
-                night_day = 0.0;
+            let lastLocation = this._settings.get_value('last-location').deep_unpack();
+            if (lastLocation.length >= 3) {
+                let [lat, lng, accuracy] = lastLocation;
+                geoloc = new Geocode.Location({ latitude: lat,
+                                                longitude: lng,
+                                                accuracy: accuracy });
             }
+
+            if (geoloc === null) {
+                log("redshift: Don't have any location (neither GeoClue nor cached) assuming daytime!");
+                return night_day;
+            }
+
+            let world = GWeather.Location.new_world(false);
+            let city = world.find_nearest_city(geoloc.latitude, geoloc.longitude);
+
+            // What meaning does the forecast type have?
+            let info = new GWeather.Info({location: city});
+            sunrise = info.get_value_sunrise();
+            sunset = info.get_value_sunset();
+            daytime = info.is_daytime();
+
+            if (!sunrise[0] || !sunset[0]) {
+                /* Polar summer/winter. Unfortunately we cannot determine any dusk/dawn times. */
+                if (daytime) {
+                    night_day = 1.0;
+                } else {
+                    night_day = 0.0;
+                }
+                return night_day;
+            }
+            sunrise = sunrise[1];
+            sunset = sunset[1];
+        }
+
+        let dusk_dawn_length = this._settings.get_uint(Lib.DUSK_DAWN_LENGTH_KEY) * 60;
+
+        /* Ensure that we select the "closest" sunrise/sunset time, this might
+         * be the one from the next or previous day. */
+        if (daytime && sunrise > time)
+            sunrise = sunrise - 24 * 60 * 60;
+        if (!daytime && sunrise < time)
+            sunrise = sunrise + 24 * 60 * 60;
+
+        if (!daytime && sunset > time)
+            sunset = sunset - 24 * 60 * 60;
+        if (daytime && sunset < time)
+            sunset = sunset + 24 * 60 * 60;
+
+        if (daytime) {
+            let dawn = 0.5 + (time - sunrise) / dusk_dawn_length;
+            let dusk = 0.5 + (sunset - time) / dusk_dawn_length;
+
+            night_day = Math.min(1.0, dawn, dusk);
+        } else {
+            let dawn = 0.5 - (sunrise - time) / dusk_dawn_length;
+            let dusk = 0.5 - (time - sunset) / dusk_dawn_length;
+
+            night_day = Math.max(0.0, dawn, dusk);
         }
 
         return night_day;

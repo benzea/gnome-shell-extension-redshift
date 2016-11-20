@@ -25,9 +25,18 @@ const DAY_TEMP_KEY = 'day-color-temperature';
 const NIGHT_DAY_KEY = 'night-day';
 const DUSK_DAWN_LENGTH_KEY = 'dusk-dawn-length';
 
+const TIME_SOURCE_KEY = 'time-source';
+
+const SUNRISE_TIME_KEY = 'sunrise-time';
+const SUNSET_TIME_KEY = 'sunset-time';
+
 const STATE_DISABLED = 0;
 const STATE_NORMAL = 1;
 const STATE_FORCE = 2;
+
+const TIME_SOURCE_GEOCLUE = 0;
+const TIME_SOURCE_LAST_KNOWN = 1;
+const TIME_SOURCE_FIXED = 2;
 
 
 

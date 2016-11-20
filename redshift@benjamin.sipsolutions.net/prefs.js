@@ -88,7 +88,83 @@ const RedshiftWidget = new Lang.Class({
         this.w.attach(length, 1, 4, 1, 1);
 
 
-    },
+        let label = new Gtk.Label({label: _("Source of sunset/sunrise time:"),
+                                           xalign: 0});
+
+        let timesrc = new Gtk.ComboBoxText();
+        timesrc.append(Lib.TIME_SOURCE_GEOCLUE+"", _("GeoClue"));
+        timesrc.append(Lib.TIME_SOURCE_LAST_KNOWN+"", _("Last known location"));
+        timesrc.append(Lib.TIME_SOURCE_FIXED+"", _("Fixed time"));
+        timesrc.set_active_id(this._settings.get_enum(Lib.TIME_SOURCE_KEY)+"");
+
+        timesrc.connect('changed', Lang.bind(this, function(combobox) {
+            let id = +combobox.get_active_id();
+            this._settings.set_enum(Lib.TIME_SOURCE_KEY, id);
+        }));
+
+        this.w.attach(label, 0, 5, 1, 1);
+        this.w.attach(timesrc, 1, 5, 1, 1);
+
+
+        function format_time(time) {
+            time = time / 60;
+            let minutes = Math.floor(time % 60) + '';
+            let hours = Math.floor(time / 60);
+            if (minutes.length < 2)
+                minutes = '0' + minutes;
+            return hours + ':' + minutes;
+        };
+
+        function parse_time(timestr) {
+            let time = timestr.split(':');
+            if (time.length != 2)
+                return -1;
+
+            let hours = +time[0];
+            let minutes = +time[1];
+            time = 60 * hours + minutes;
+
+            return 60 * time;
+        };
+
+        let label = new Gtk.Label({label: _("Time of sunrise in fixed mode (hh:mm):"),
+                                           xalign: 0});
+
+        let time = new Gtk.Entry();
+        time.set_text(format_time(this._settings.get_uint(Lib.SUNRISE_TIME_KEY)));
+
+        time.connect('changed', Lang.bind(this, function(entry) {
+            let time = parse_time(entry.get_text());
+            if (time < 0 || time > 86400) {
+                entry.set_text(format_time(this._settings.get_uint(Lib.SUNRISE_TIME_KEY)));
+            } else {
+                this._settings.set_uint(Lib.SUNRISE_TIME_KEY, time);
+            }
+        }));
+
+        this.w.attach(label, 0, 6, 1, 1);
+        this.w.attach(time, 1, 6, 1, 1);
+
+
+        let label = new Gtk.Label({label: _("Time of sunset in fixed mode (hh:mm):"),
+                                           xalign: 0});
+
+        let time = new Gtk.Entry();
+        time.set_text(format_time(this._settings.get_uint(Lib.SUNSET_TIME_KEY)));
+
+        time.connect('changed', Lang.bind(this, function(entry) {
+            let time = parse_time(entry.get_text());
+            if (time < 0 || time > 86400) {
+                entry.set_text(format_time(this._settings.get_uint(Lib.SUNSET_TIME_KEY)));
+            } else {
+                this._settings.set_uint(Lib.SUNSET_TIME_KEY, time);
+            }
+        }));
+
+        this.w.attach(label, 0, 7, 1, 1);
+        this.w.attach(time, 1, 7, 1, 1);
+
+   },
 
     _refresh: function() {
         // Do nothing for now, just assume no one else is editing the settings

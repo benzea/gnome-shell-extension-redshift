@@ -6,6 +6,12 @@
         <value nick="force" value="2"/>
     </enum>
 
+    <enum id="org.gnome.shell.extensions.redshift-gnome.time-source-enum">
+        <value nick="geoclue" value="0"/>
+        <value nick="last-known" value="1"/>
+        <value nick="fixed" value="2"/>
+    </enum>
+
   <schema path="/org/gnome/shell/extensions/redshift-gnome/" id="org.gnome.shell.extensions.redshift-gnome">
     <key type="u" name="night-color-temperature">
         <default>3500</default>
@@ -35,6 +41,11 @@
         <summary>The current redshift mode.</summary>
         <description></description>
     </key>
+    <key enum="org.gnome.shell.extensions.redshift-gnome.time-source-enum" name="time-source">
+        <default>'geoclue'</default>
+        <summary>How to calculate the sunrise and sunset times.</summary>
+        <description>By default this is 'geoclue' to always use the current location. Valid settings are also 'fixed' to use 'sunrise-time' and 'sunset-time' or 'last-known' to use the cached location value instead of having geoclue active at all times.</description>
+    </key>
     <key type="d" name="night-day">
         <default>1.0</default>
         <range min="0.0" max="1.0" />
@@ -45,6 +56,18 @@
         <default>[]</default>
         <summary>Last known location and accuracy</summary>
         <description>Last known location (latitude and longitude in degrees) and accuracy (in meters).</description>
+    </key>
+    <key type="u" name="sunrise-time">
+        <default>27000</default>
+        <range min="0" max="86400" />
+        <summary>The time of the simulated sunrise (seconds after midnight)</summary>
+        <description>The time that the sun rises when in fixed time mode. The setting is given as seconds after midnight.</description>
+    </key>
+    <key type="u" name="sunset-time">
+        <default>70200</default>
+        <range min="0" max="86400" />
+        <summary>Fixed time of sunset (seconds after midnight)</summary>
+        <description>The time of the simulated sunset when in fixed time mode. The setting is given as seconds after midnight.</description>
     </key>
   </schema>
 </schemalist>
