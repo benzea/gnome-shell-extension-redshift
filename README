@@ -25,8 +25,8 @@ See also:
 Configuration
 =============
 
-Use gnome-tweak-tool or https://extensions.gnome.org to open the configuration
-dialog. There you can configure:
+Click on Preferences, use gnome-tweak-tool or https://extensions.gnome.org to
+open the configuration dialog. There you can configure:
 
  * The daytime color temperature (default: 6500K)
  * The nighttime color temperature (default: 3500K)

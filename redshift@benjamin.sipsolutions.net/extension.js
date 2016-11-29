@@ -35,7 +35,7 @@ const Shell = imports.gi.Shell;
 const MessageTray = imports.ui.messageTray;
 const Config = imports.misc.config;
 const Slider = imports.ui.slider;
-
+const Util = imports.misc.util;
 
 const Gettext = imports.gettext.domain('gnome-shell-extension-redshift');
 const _ = Gettext.gettext;
@@ -100,6 +100,16 @@ const Redshift = new Lang.Class({
         item.actor.connect('key-press-event', Lang.bind(this, function(actor, event) {
             return this._night_day_slider.onKeyPressEvent(actor, event);
         }));
+
+
+        let item = new PopupMenu.PopupSeparatorMenuItem();
+        this.menu.addMenuItem(item);
+
+        this._preferences = new PopupMenu.PopupMenuItem(_("Preferences"));
+        this._preferences.connect('activate', function () {
+            Util.spawn(["gnome-shell-extension-prefs", Me.metadata.uuid]);
+        });
+        this.menu.addMenuItem(this._preferences);
 
         this._configChanged();
     },

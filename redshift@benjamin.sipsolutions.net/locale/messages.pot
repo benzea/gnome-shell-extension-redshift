@@ -25,6 +25,10 @@ msgstr ""
 msgid "Night Day Slider"
 msgstr ""
 
+#: extension.js:108
+msgid "Preferences"
+msgstr ""
+
 #: prefs.js:33
 msgid "Show Redshift in top panel"
 msgstr ""
