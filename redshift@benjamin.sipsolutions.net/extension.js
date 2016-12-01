@@ -307,7 +307,6 @@ const Redshift = new Lang.Class({
 
     _recalcNightDay : function() {
         let night_day = 1.0;
-        let geoloc = null;
         // Time of todays sunrise/sunset.
         let sunrise;
         let sunset;
@@ -337,20 +336,19 @@ const Redshift = new Lang.Class({
             }
         } else {
             let lastLocation = this._settings.get_value('last-location').deep_unpack();
-            if (lastLocation.length >= 3) {
-                let [lat, lng, accuracy] = lastLocation;
-                geoloc = new Geocode.Location({ latitude: lat,
-                                                longitude: lng,
-                                                accuracy: accuracy });
-            }
+            let latitude, longitude, accuracy;
 
-            if (geoloc === null) {
+            if (lastLocation.length >= 3) {
+                latitude = lastLocation[0]
+                longitude = lastLocation[1]
+                accuracy = lastLocation[2];
+            } else {
                 log("redshift: Don't have any location (neither GeoClue nor cached) assuming daytime!");
                 return night_day;
             }
 
             let world = GWeather.Location.new_world(false);
-            let city = world.find_nearest_city(geoloc.latitude, geoloc.longitude);
+            let city = world.find_nearest_city(latitude, longitude);
 
             // What meaning does the forecast type have?
             let info = new GWeather.Info({location: city});
