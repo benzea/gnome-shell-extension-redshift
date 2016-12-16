@@ -19,8 +19,8 @@ is supplied, although only the 3.22 version is tested.
 This extension will do nothing if you do not patch gnome-settings-daemon!
 
 See also:
-  https://bugzilla.gnome.org/show_bug.cgi?id=741224
-  https://bugzilla.gnome.org/show_bug.cgi?id=742149
+ * https://bugzilla.gnome.org/show_bug.cgi?id=741224
+ * https://bugzilla.gnome.org/show_bug.cgi?id=742149
 
 Configuration
 =============
