@@ -196,80 +196,87 @@ const Redshift = new Lang.Class({
 
     _geoclueCreate : function() {
         if (this._geoclue != null || this._geoclue_create != null)
-            return;
+            return false;
 
         log('redshift: creating geoclue client')
 
         /* Empty placeholder */
         this._geoclue = null
-        /* Not passed in to constructor, as actually cancelling the setup
-         * doesn't stop the services. */
         this._geoclue_create = new Gio.Cancellable();
 
         //let id = 'org.gnome.shell.extensions.redshift-gnome';
         let level = GClue.AccuracyLevel.CITY;
         let id = 'org.gnome.Maps';
 
-        GClue.Simple.new(id, level, null, (function(object, result) {
-            log("redshift: gclue simple created");
+        GClue.ClientProxy.create(id, level, this._geoclue_create, (function(object, result) {
+            log("redshift: GClue client proxy created");
             try {
-                this._geoclue = GClue.Simple.new_finish(result);
-            }
-            catch (e) {
-                log("GeoClue2 service: " + e.message);
+                this._geoclue = GClue.ClientProxy.create_finish(result);
+            } catch (e) {
+                log("redshift: GClue client proxy create_finish failed: " + e.message);
                 this._geoclue = null;
                 this._geoclue_create = null;
                 return;
             }
 
             if (this._geoclue_create.is_cancelled()) {
-                log('redshift: connect operation got cancelled, ensuring disconnect')
-                let client = this._geoclue.get_client();
-                let cancellable = new Gio.Cancellable();
-                if (client)
-                    client.call_stop_sync(cancellable);
-
+                log('redshift: connect operation got cancelled, cleaning up')
                 this._geoclue = null;
                 this._geoclue_create = null;
                 return;
             }
-            this._geoclue_create = null;
 
-            log('redshift: geoclue client created and active', this._geoclue)
+            this._notify_location_id = this._geoclue.connect('location-updated',
+                                                            this._onLocationUpdated.bind(this));
 
-            this._notify_location_id = this._geoclue.connect('notify::location',
-                                                            this._onLocationNotify.bind(this));
+            this._geoclue.call_start(this._geoclue_create, (function(object, result) {
+                let res = this._geoclue.call_start_finish(result);
 
-            this._onLocationNotify(this._geoclue);
+                if (!res) {
+                    // Start failed, destroy geoclue connection again
+                    this._geoclue.disconnect(this._notify_location_id)
+                    this._geoclue = null;
+                    this._geoclue_create = null;
+                    return;
+                }
+
+                this._geoclue_create = null;
+                log('redshift: GClue client created and started.')
+            }).bind(this));
         }).bind(this));
     },
 
     _geoclueDestroy : function() {
+        // Abort any startup which is in progress
         if (this._geoclue_create) {
-            log('redshift: cancelling connect')
             this._geoclue_create.cancel();
+            return;
         }
 
-        if (this._geoclue == null)
+        // No startup in progress, check if we even have a connection
+        if (!this._geoclue)
             return;
 
-        log('redshift: destroying geoclue client')
-
+        // Should have a connection, so disconnect handler.
         if (this._notify_location_id) {
-            log('redshift: disconnecting location notification callback')
             this._geoclue.disconnect(this._notify_location_id);
+            this._notify_location_id = null;
+        } else {
+            log('redshift: location-update handler was not registered even though it should be!')
         }
 
-        let client = this._geoclue.get_client();
-        if (client) {
-            let cancellable = new Gio.Cancellable();
-            log('redshift: sending explicit stop')
-            client.call_stop_sync(cancellable);
-        }
-
-        this._notify_location_id = null;
+        // Stop the client that we have
+        let cancellable = new Gio.Cancellable();
+        this._geoclue.call_stop(cancellable, (function(object, result) {
+            // This method is not bound!
+            let res = object.call_stop_finish(result);
+            if (!res) {
+                log('redshift: Failed to stop GClue client!')
+            } else {
+                log('redshift: GClue client stopped again.')
+            }
+        }));
         this._geoclue = null;
-        log('redshift: geoclue client destroyed')
     },
 
     _updateLocationService : function() {
@@ -283,21 +290,31 @@ const Redshift = new Lang.Class({
         }
     },
 
-    _onLocationNotify : function(simple) {
-        let state = this._settings.get_enum(Lib.STATE_KEY);
+    _onLocationUpdated : function(client, old_location, new_location) {
+            if (!new_location || new_location == "/")
+                return;
 
-        log('redshift: got location notification from geoclue')
+            log("redshift: GClue has a new location, querying information.");
 
-        // Update stored location
-        let loc = simple.get_location();
-        if (loc != null)
-            this._settings.set_value('last-location',
-                                     GLib.Variant.new ('ad', [loc.latitude,
-                                                              loc.longitude,
-                                                              loc.accuracy]));
-
-        // _recalcNightDay will be called because the settings were updated.
+            GClue.LocationProxy.new_for_bus(
+                Gio.BusType.SYSTEM,
+                0,
+                "org.freedesktop.GeoClue2",
+                new_location,
+                null, /* cancellable */
+                (function (proxy, result) {
+                    let loc = GClue.LocationProxy.new_for_bus_finish(result);
+                    if (loc) {
+                        log("redshift: updating location using new information");
+                        this._settings.set_value('last-location',
+                                                 GLib.Variant.new ('ad', [loc.latitude,
+                                                                          loc.longitude,
+                                                                          loc.accuracy]));
+                    }
+                }).bind(this)
+            );
     },
+
 
     _updateColorTempBasedOnTime : function() {
         let night_day = this._recalcNightDay();
