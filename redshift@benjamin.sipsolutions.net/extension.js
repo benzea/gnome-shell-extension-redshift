@@ -196,7 +196,7 @@ const Redshift = new Lang.Class({
 
     _geoclueCreate : function() {
         if (this._geoclue != null || this._geoclue_create != null)
-            return false;
+            return;
 
         log('redshift: creating geoclue client')
 
